@@ -5,7 +5,7 @@ import org.specs2.mutable.Specification
 class ArrayBasedSudokuSolverSpec extends Specification {
 
   "ArrayBasedSudokuSolver" should {
-/*
+
     "prune nothing from an empty board" in {
       val str = "................................................................................."
       val pruned = ArrayBasedSudokuSolver.prune(ArrayBasedBoard.parse(str))
@@ -55,6 +55,17 @@ class ArrayBasedSudokuSolverSpec extends Specification {
         ("546931278831267594792485361624758913973124856158693742215849637387516429469372185")
     }
 
+    "solve incomplete another easy puzzle with just pruning" in {
+      val str = "94.6.5..3..78.....5...2...4..3.6..9..69..2..1....8..4..5.978...2..1.3.677.....85."
+      val board = ArrayBasedSudokuSolver.prune(ArrayBasedBoard.parse(str))
+
+      val result = ArrayBasedSudokuSolver.solve(board)
+      result.nonEmpty mustEqual (true)
+      result.get.isFinished mustEqual (true)
+      result.getOrElse("").toString mustEqual
+        ("942615783317894625586327914473561298869432571125789346654978132298153467731246859")
+    }
+
     "solve incomplete easy puzzle" in {
       val str = "003020600900305001001806400008102900700000008006708200002609500800203009005010300"
       val board = ArrayBasedSudokuSolver.prune(ArrayBasedBoard.parse(str))
@@ -65,7 +76,7 @@ class ArrayBasedSudokuSolverSpec extends Specification {
       result.getOrElse("").toString mustEqual
         ("483921657967345821251876493548132976729564138136798245372689514814253769695417382")
     }
-*/
+
 
     "solve incomplete hard puzzle" in {
       val str = ".........4.6.7..9..5..382.........3.9..........426.....7...3..2..16..8...85...7.."
@@ -77,6 +88,18 @@ class ArrayBasedSudokuSolverSpec extends Specification {
       result.getOrElse("").toString mustEqual
         ("893426175426571398157938246512789634968314527734265981679853412241697853385142769")
     }
+
+    "solve incomplete easy puzzle" in {
+      val str = ".........4.6.7..9..5..382.........3.9..........426.....7...3..2..16..8...85...7.."
+      val board = ArrayBasedBoard.parse(str)
+
+      val result = ArrayBasedSudokuSolver.solve(ArrayBasedSudokuSolver.prune(board))
+      result.nonEmpty mustEqual (true)
+      result.get.isFinished mustEqual (true)
+      result.getOrElse("").toString mustEqual
+        ("893426175426571398157938246512789634968314527734265981679853412241697853385142769")
+    }
+
 
   }
 }
