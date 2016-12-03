@@ -8,78 +8,39 @@ import scala.annotation.tailrec
 import scala.io.Source
 import scala.util.control.NonFatal
 
-case class Cell(x: Int, y: Int, cands: Set[Int]) {
+case class ListBasedBoard(cells: List[Cell]) extends SudokuBoard {
 
-  def value: Option[Int] = {
-    if (cands.size == 1) {
-      cands.headOption
-    } else {
-      None
-    }
-  }
-}
+  override def cell(x: Int, y: Int): Cell = cells.filter(c => c.y == y && c.x == x).head
 
-case class ListBasedBoard(cells: List[Cell]) {
+  override def row(y: Int): List[Cell] = cells.filter(_.y == y)
 
-  def cell(x: Int, y: Int): List[Cell] = {
-    cells.filter(c => c.y == y && c.x == x)
-  }
+  override def col(x: Int): List[Cell] = cells.filter(_.x == x)
 
-  def row(y: Int): List[Cell] = {
-    cells.filter(_.y == y)
-  }
+  override def cellIterator: Iterator[Cell] = cells.iterator
 
-  def col(x: Int): List[Cell] = {
-    cells.filter(_.x == x)
-  }
-
-  def unassigned: List[Cell] = {
-    cells.filter(_.value.isEmpty)
-  }
-
-  def block(x: Int, y: Int): List[Cell] = {
+  override def block(x: Int, y: Int): List[Cell] =
     cells.filter(c => coords(y).contains(c.y) && coords(x).contains(c.x))
-  }
 
-  def neighborhood(x: Int, y: Int): Set[Cell] = {
-    (row(y) ::: col(x) ::: block(x, y)).toSet.filterNot(c => c.y == y && c.x == x)
-  }
+  override def neighborhood(x: Int, y: Int): List[Cell] =
+    (row(y) ::: col(x) ::: block(x, y)).filterNot(c => c.y == y && c.x == x)
 
-  def isValid: Boolean = {
-    isCellValuesOk && hasNoDuplicates
-  }
+  override def isValid: Boolean = isCellValuesOk && hasNoDuplicates
 
-  def isFinished: Boolean = {
-    unassigned.isEmpty && isValid
-  }
+  override def isFinished: Boolean = unassigned.isEmpty && isValid
 
-  override def toString: String = {
-    val builder = new StringBuilder
-    cells.foreach { cell =>
-      builder.append(cell.value.getOrElse("."))
-    }
-    builder.toString
-  }
+  override def toString: String = cells.map(_.value.getOrElse(".")).mkString("")
 
-  def +(c: Cell): ListBasedBoard = {
+  def +(c: Cell): ListBasedBoard =
     ListBasedBoard((cells.filterNot(d => d.x == c.x && d.y == c.y) :+ c).sortBy(d => (d.y, d.x)))
-  }
 
   def hasNoDuplicates: Boolean = {
     cells.filter(_.value.nonEmpty).map { cell =>
-      val cellOk = cell.value.map { v =>
-        val neighborhoodValues: Set[Int] = neighborhood(cell.x, cell.y).
-          flatMap(_.value)
+      cell.value.map { v =>
+        val neighborhoodValues: Set[Int] = neighborhood(cell.x, cell.y).flatMap(_.value).toSet
+
         !neighborhoodValues.contains(v)
       }.getOrElse(true)
-      cellOk
     }.filter(_.equals(false)).isEmpty
-  }
-
-  def isCellValuesOk: Boolean = {
-    cells.collect {
-      case (cell) if (cell.cands.isEmpty) => cell
-    }.isEmpty
   }
 
   def coords(z: Int): Set[Int] = {
@@ -127,26 +88,6 @@ object ListBasedBoard {
     ListBasedBoard(cells.sortBy(c => (c.y, c.x)).toList)
   }
 
-  def prettyString(board: ListBasedBoard): String = {
-    val width = board.cells.map(_.cands.size).max
-    val pipes = Set[Int](2, 5, 8)
-    val line = "+" + (0 until 9).map(x => "-" * width + {
-      if (pipes(x)) "-+" else "-"
-    }).mkString("-")
-
-    s"\n$line\n" + (0 until 9).map { y =>
-      "|" + (0 until 9).flatMap { x =>
-        board.cell(x, y).
-          map(_.cands.toList.sorted.mkString("")).
-          map(c => String.format(s"%${width}s", c) + {
-            if (pipes(x)) " |" else " "
-          })
-      }.mkString(" ") + {
-        if (pipes(y)) s"\n$line" else ""
-      }
-    }.mkString("\n") + s"\n"
-  }
-
 }
 
 object ListBasedSudokuSolver extends LazyLogging {
@@ -161,7 +102,7 @@ object ListBasedSudokuSolver extends LazyLogging {
   }
 
   def iterate(board: ListBasedBoard): Option[ListBasedBoard] = {
-    logger.trace(s"iterate: $board\n${ListBasedBoard.prettyString(board)}")
+    logger.trace(s"iterate: $board\n${board.prettyString}")
 
     if (!board.isValid) {
       None
@@ -192,7 +133,7 @@ object ListBasedSudokuSolver extends LazyLogging {
       val prunedCandidates = if (cell.value.nonEmpty) {
         cell.cands
       } else {
-        cell.cands.diff(board.neighborhood(cell.x, cell.y).flatMap(_.value))
+        cell.cands.diff(board.neighborhood(cell.x, cell.y).flatMap(_.value).toSet)
       }
       Cell(cell.x, cell.y, prunedCandidates)
     }
@@ -205,10 +146,9 @@ object ListBasedSudokuSolver extends LazyLogging {
       ListBasedBoard(prunedCells)
     }
   }
-
 }
 
-object SudokuBenchmark extends LazyLogging {
+object ListBasedSudokuBenchmark extends LazyLogging {
 
   def main(args: Array[String]): Unit = {
     val inputFilename = args(0)
@@ -234,7 +174,7 @@ object SudokuBenchmark extends LazyLogging {
   def readSudokuFile(filename: String): List[String] = {
     val src = Source.fromFile(new File(filename))
     try {
-      src.getLines.map(_.trim).filter(_.isEmpty).toList
+      src.getLines.map(_.trim).filter(_.nonEmpty).toList
     } catch {
       case NonFatal(e) =>
         logger.error(s"Error: $e", e.fillInStackTrace())
@@ -243,6 +183,4 @@ object SudokuBenchmark extends LazyLogging {
       src.close
     }
   }
-
-
 }

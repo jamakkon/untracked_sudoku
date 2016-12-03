@@ -2,16 +2,25 @@ package com.untrackedfiles.misc.sudoku
 
 import org.specs2.mutable.Specification
 
-class ListBasedSudokuSpec extends Specification {
+class ListBasedSudokuSolverSpec extends Specification {
 
-  "ListBasedSudoku" should {
+  "ListBasedSudokuSolver" should {
+
+    "prune nothing from an empty board" in {
+      val str = "................................................................................."
+      val pruned = ArrayBasedSudokuSolver.prune(ArrayBasedBoard.parse(str))
+
+      pruned.isFinished mustEqual (false)
+      forall(pruned.cellIterator)((_: Cell).cands mustEqual Set[Int](1, 2, 3, 4, 5, 6, 7, 8, 9))
+    }
 
     "prune redundant candidates in an incomplete board" in {
       val str = "1................................................................................"
       val pruned = ListBasedSudokuSolver.prune(ListBasedBoard.parse(str))
 
-      val nbCands = pruned.neighborhood(0, 0).filter(_.value.isEmpty).flatMap(_.cands)
-      nbCands.contains(1) mustEqual (false)
+      forall(pruned.cellIterator.filter(c => c.x == 0 && c.y == 0))((_: Cell).cands mustEqual Set[Int](1))
+      forall(pruned.cellIterator.filter(c => c.x == 0 && c.y != 0))((_: Cell).cands mustEqual Set[Int](2, 3, 4, 5, 6, 7, 8, 9))
+      forall(pruned.cellIterator.filter(c => c.x != 0 && c.y == 0))((_: Cell).cands mustEqual Set[Int](2, 3, 4, 5, 6, 7, 8, 9))
     }
 
     "prune redundant candidates in a complete board" in {
@@ -46,6 +55,7 @@ class ListBasedSudokuSpec extends Specification {
     "solve incomplete board" in {
       val str = "003020600900305001001806400008102900700000008006708200002609500800203009005010300"
       val board = ListBasedSudokuSolver.prune(ListBasedBoard.parse(str))
+
 
       val result = ListBasedSudokuSolver.solve(board)
       result.nonEmpty mustEqual (true)

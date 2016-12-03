@@ -49,17 +49,17 @@ class ListBasedBoardSpec extends Specification {
   "cell" should {
 
     "return given cell" in {
-      miniBoard.cell(0, 0)(0).value.getOrElse(0) mustEqual (1)
-      miniBoard.cell(1, 0)(0).value.getOrElse(0) mustEqual (2)
-      miniBoard.cell(2, 0)(0).value.getOrElse(0) mustEqual (3)
+      miniBoard.cell(0, 0).value.getOrElse(0) mustEqual (1)
+      miniBoard.cell(1, 0).value.getOrElse(0) mustEqual (2)
+      miniBoard.cell(2, 0).value.getOrElse(0) mustEqual (3)
 
-      miniBoard.cell(0, 1)(0).value.getOrElse(0) mustEqual (4)
-      miniBoard.cell(1, 1)(0).value.getOrElse(0) mustEqual (5)
-      miniBoard.cell(2, 1)(0).value.getOrElse(0) mustEqual (6)
+      miniBoard.cell(0, 1).value.getOrElse(0) mustEqual (4)
+      miniBoard.cell(1, 1).value.getOrElse(0) mustEqual (5)
+      miniBoard.cell(2, 1).value.getOrElse(0) mustEqual (6)
 
-      miniBoard.cell(0, 2)(0).value.getOrElse(0) mustEqual (7)
-      miniBoard.cell(1, 2)(0).value.getOrElse(0) mustEqual (8)
-      miniBoard.cell(2, 2)(0).value.getOrElse(0) mustEqual (9)
+      miniBoard.cell(0, 2).value.getOrElse(0) mustEqual (7)
+      miniBoard.cell(1, 2).value.getOrElse(0) mustEqual (8)
+      miniBoard.cell(2, 2).value.getOrElse(0) mustEqual (9)
     }
   }
 
@@ -237,11 +237,11 @@ class ListBasedBoardSpec extends Specification {
       val str = "123456789456789123789123456234567891567891234891234567345678912678912345912345678"
       val board = ListBasedBoard.parse(str)
 
-      val nbValues1: Set[Int] = board.neighborhood(3, 0).flatMap(_.value)
+      val nbValues1: Set[Int] = board.neighborhood(3, 0).flatMap(_.value).toSet
       nbValues1.size mustEqual (8)
       nbValues1.contains(4) mustEqual (false)
 
-      val nbValues2: Set[Int] = board.neighborhood(6, 7).flatMap(_.value)
+      val nbValues2: Set[Int] = board.neighborhood(6, 7).flatMap(_.value).toSet
       nbValues2.size mustEqual (8)
       nbValues2.contains(3) mustEqual (false)
     }
@@ -265,8 +265,8 @@ class ListBasedBoardSpec extends Specification {
       val str = "85...24..72......9..4.........1.7..23.5...9...4...........8..7..17..........36.4."
       val board = ListBasedBoard.parse(str)
 
-      board.neighborhood(0, 0).flatMap(_.value) mustEqual (Set[Int](7, 5, 2, 4, 3))
-      board.neighborhood(1, 5).flatMap(_.value) mustEqual (Set[Int](1, 3, 5, 2))
+      board.neighborhood(0, 0).flatMap(_.value).toSet mustEqual (Set[Int](7, 5, 2, 4, 3))
+      board.neighborhood(1, 5).flatMap(_.value).toSet mustEqual (Set[Int](1, 3, 5, 2))
     }
   }
 
@@ -348,12 +348,12 @@ class ListBasedBoardSpec extends Specification {
         Cell(4, 2, Set[Int](3, 5, 1)))
 
       board.cells.length mustEqual (81)
-      board.cell(0, 0)(0).value.getOrElse(0) mustEqual (9)
-      board.cell(0, 0)(0).cands mustEqual (Set[Int](9))
+      board.cell(0, 0).value.getOrElse(0) mustEqual (9)
+      board.cell(0, 0).cands mustEqual (Set[Int](9))
       board.neighborhood(0, 0).filter(_.value.isEmpty).flatMap(_.cands).contains(9) mustEqual (false)
 
-      board.cell(4, 2)(0).value mustEqual (None)
-      board.cell(4, 2)(0).cands mustEqual (Set[Int](1, 3, 5))
+      board.cell(4, 2).value mustEqual (None)
+      board.cell(4, 2).cands mustEqual (Set[Int](1, 3, 5))
       board.neighborhood(4, 2).filter(_.value.isEmpty).flatMap(_.cands).contains(5) mustEqual (true)
     }
 
